@@ -30,7 +30,7 @@ export const nav = {
   ],
   cta: {
     primary: 'Open App →',
-    primaryHref: 'http://localhost:3000/editor',
+    primaryHref: '/upload',
     secondary: 'View Source',
     secondaryHref: 'https://github.com',
   },
@@ -45,7 +45,7 @@ export const hero = {
   leadBold: ['JD-tailored', 'Live scoring out of 100', 'Zero cloud lock-in'],
   cta: {
     primary: 'Open App →',
-    primaryHref: 'http://localhost:3000/editor',
+    primaryHref: '/upload',
     secondary: 'View Source',
     secondaryHref: 'https://github.com',
   },
@@ -175,7 +175,7 @@ export const cta = {
   subheading:
     'Open the app and start with the master resume — or paste a JD straight into the Tailor tab and watch it match.',
   primary: 'Open App →',
-  primaryHref: 'http://localhost:3000/editor',
+  primaryHref: '/upload',
   secondary: 'Clone the Repo',
   secondaryHref: 'https://github.com',
 }
