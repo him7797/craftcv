@@ -87,3 +87,100 @@ export type UploadPageState =
   | { phase: 'success'; file: File; result: Extract<ParseResult, { status: 'success' }> }
   | { phase: 'partial'; file: File; result: Extract<ParseResult, { status: 'partial' }>; score: ScoreResult }
   | { phase: 'error'; file: File; result: Extract<ParseResult, { status: 'error' }> }
+
+// ─── Editor (003-editor-screen) ──────────────────────────────────────────────
+
+export type EditorSection =
+  | 'experience'
+  | 'skills'
+  | 'education'
+  | 'projects'
+  | 'header'
+
+export type Version = {
+  id: string
+  name: string
+  resume: Resume
+  branchedFromId: string | null
+  createdAt: string
+}
+
+export type BulletPath =
+  | { section: 'experience'; expIndex: number; clientIndex: number | null; bulletIndex: number }
+  | { section: 'projects'; projectIndex: number; bulletIndex: number }
+
+export type ParentPath =
+  | { section: 'experience'; expIndex: number; clientIndex: number | null }
+  | { section: 'projects'; projectIndex: number }
+
+export type BulletToken =
+  | { kind: 'text'; value: string }
+  | { kind: 'metric'; value: string }
+  | { kind: 'tech'; value: string }
+  | { kind: 'italic'; value: string }
+
+export type AiSessionTarget = BulletPath | { section: 'new-bullet'; parent: ParentPath }
+
+export type AiSession = {
+  target: AiSessionTarget
+  rough: string
+  suggestion: string
+  streaming: boolean
+  retriesLeft: number
+  hint?: 'different-angle' | 'shorter' | 'add-metric'
+  error?: string
+}
+
+export type SubScores = {
+  impact: number
+  language: number
+  tailoring: number
+  format: number
+}
+
+export type FixTarget =
+  | { kind: 'bullet'; path: BulletPath }
+  | { kind: 'section'; section: EditorSection }
+  | { kind: 'tab'; tab: 'preview' | 'tailor' | 'score' }
+
+export type Fix = {
+  id: string
+  axis: keyof SubScores
+  state: 'open' | 'resolved'
+  priority: 'high' | 'medium' | 'low'
+  message: string
+  hint?: string
+  target?: FixTarget
+}
+
+export type Score = {
+  overall: number
+  band: 'needs-work' | 'good' | 'great'
+  subScores: SubScores
+  fixes: Fix[]
+}
+
+export type EditorState = {
+  activeSection: EditorSection
+  activeVersionId: string
+  aiSession: AiSession | null
+  retryCounts: Record<string, number>
+  lastSavedAt: string | null
+}
+
+// LLM status (returned by GET /api/llm-status)
+export type LlmStatus = {
+  provider: 'ollama' | 'groq' | 'gemini'
+  model: { rewrite: string; score: string }
+  status: 'running' | 'connected' | 'rate-limited' | 'down'
+  usage?: { used: number; limit: number }
+}
+
+// ─── Persistence snapshot (localStorage key 'craftcv:resume:v1') ─────────────
+
+export type PersistedSnapshot = {
+  schemaVersion: 1
+  activeVersionId: string
+  versions: Record<string, Version>
+  lastSavedAt: string
+}
