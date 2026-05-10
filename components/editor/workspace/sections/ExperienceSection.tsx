@@ -6,9 +6,12 @@ import BulletRow from '../BulletRow'
 import ClientMetaStrip from '../ClientMetaStrip'
 import NewBulletInput from '../NewBulletInput'
 import SectionHeader from '../SectionHeader'
+import RewriteBlockButton from '../blocks/RewriteBlockButton'
 import { dispatchRewrite } from '@/lib/editor/aiDispatch'
+import { dispatchBlockRewrite } from '@/lib/editor/blockRewriteDispatch'
 import { isParentMatch, isPathMatch } from '@/lib/editor/aiMatch'
 import { useStore } from '@/lib/store'
+import { useBlockRewriteStore } from '@/lib/store/useBlockRewriteStore'
 import type { Resume } from '@/lib/types'
 
 export default function ExperienceSection({ resume }: { resume: Resume }) {
@@ -16,6 +19,18 @@ export default function ExperienceSection({ resume }: { resume: Resume }) {
   const removeExperience = useStore((s) => s.removeExperience)
   const updateExperienceField = useStore((s) => s.updateExperienceField)
   const session = useStore((s) => s.editor.aiSession)
+  const blockSession = useBlockRewriteStore((s) => s.session)
+
+  function guardedRewrite(fn: () => void) {
+    if (blockSession) {
+      if (window.confirm('Discard current rewrite?')) {
+        useBlockRewriteStore.getState().cancelRewrite()
+        fn()
+      }
+    } else {
+      fn()
+    }
+  }
 
   if (resume.experience.length === 0) {
     return (
@@ -42,20 +57,42 @@ export default function ExperienceSection({ resume }: { resume: Resume }) {
               title={exp.company}
               subtitle={subtitle}
               rightSlot={
-                <button
-                  type="button"
-                  className="editor-btn-sm"
-                  onClick={() => removeExperience(expIndex)}
-                  title="Remove experience"
-                >
-                  ✕
-                </button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <RewriteBlockButton
+                    id={`rewrite-btn-experience-description-${expIndex}`}
+                    label="REWRITE"
+                    disabled={!!blockSession}
+                    onClick={() =>
+                      guardedRewrite(() =>
+                        dispatchBlockRewrite(
+                          { blockType: 'experience-description', expIndex },
+                          { blockType: 'experience-description', text: exp.description ?? '' },
+                        )
+                      )
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="editor-btn-sm"
+                    onClick={() => removeExperience(expIndex)}
+                    title="Remove experience"
+                  >
+                    ✕
+                  </button>
+                </div>
               }
               onEdit={() => {
                 const next = window.prompt('Company name', exp.company)
                 if (next !== null) updateExperienceField(expIndex, 'company', next)
               }}
             />
+
+            {/* Experience description (intro line) */}
+            {exp.description && (
+              <p style={{ fontSize: 13, color: '#555', margin: '4px 0 12px', lineHeight: 1.5, fontStyle: 'italic' }}>
+                {exp.description}
+              </p>
+            )}
 
             {hasClients ? (
               exp.clients!.map((client, clientIndex) => {
@@ -100,6 +137,22 @@ export default function ExperienceSection({ resume }: { resume: Resume }) {
                         dispatchRewrite({ section: 'new-bullet', parent }, rough)
                       }
                     />
+                    {/* REWRITE ALL BULLETS for this client */}
+                    <div style={{ marginTop: 8, marginBottom: 4 }}>
+                      <RewriteBlockButton
+                        id={`rewrite-btn-experience-bullets-${expIndex}-${clientIndex}`}
+                        label="REWRITE ALL BULLETS"
+                        disabled={!client.bullets.length || !!blockSession}
+                        onClick={() =>
+                          guardedRewrite(() =>
+                            dispatchBlockRewrite(
+                              { blockType: 'experience-bullets', expIndex, clientIndex },
+                              { blockType: 'experience-bullets', bullets: client.bullets },
+                            )
+                          )
+                        }
+                      />
+                    </div>
                     {!isLast && <hr className="editor-dashed-divider" />}
                   </Fragment>
                 )
@@ -111,6 +164,8 @@ export default function ExperienceSection({ resume }: { resume: Resume }) {
                 role={exp.role}
                 startDate={exp.startDate}
                 endDate={exp.endDate}
+                blockSession={!!blockSession}
+                guardedRewrite={guardedRewrite}
               />
             )}
           </div>
@@ -135,12 +190,16 @@ function FlatExperience({
   role,
   startDate,
   endDate,
+  blockSession,
+  guardedRewrite,
 }: {
   expIndex: number
   bullets: string[]
   role: string
   startDate: string
   endDate: string
+  blockSession: boolean
+  guardedRewrite: (fn: () => void) => void
 }) {
   const session = useStore((s) => s.editor.aiSession)
   const parent = { section: 'experience' as const, expIndex, clientIndex: null }
@@ -179,6 +238,22 @@ function FlatExperience({
           dispatchRewrite({ section: 'new-bullet', parent }, rough)
         }
       />
+      {/* REWRITE ALL BULLETS for flat experience */}
+      <div style={{ marginTop: 8 }}>
+        <RewriteBlockButton
+          id={`rewrite-btn-experience-bullets-${expIndex}-null`}
+          label="REWRITE ALL BULLETS"
+          disabled={!bullets.length || blockSession}
+          onClick={() =>
+            guardedRewrite(() =>
+              dispatchBlockRewrite(
+                { blockType: 'experience-bullets', expIndex, clientIndex: null },
+                { blockType: 'experience-bullets', bullets },
+              )
+            )
+          }
+        />
+      </div>
     </>
   )
 }

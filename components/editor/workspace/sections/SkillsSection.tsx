@@ -1,6 +1,9 @@
 'use client'
 
+import RewriteBlockButton from '../blocks/RewriteBlockButton'
+import { dispatchBlockRewrite } from '@/lib/editor/blockRewriteDispatch'
 import { useStore } from '@/lib/store'
+import { useBlockRewriteStore } from '@/lib/store/useBlockRewriteStore'
 import type { Resume } from '@/lib/types'
 
 export default function SkillsSection({ resume }: { resume: Resume }) {
@@ -8,13 +11,40 @@ export default function SkillsSection({ resume }: { resume: Resume }) {
   const removeSkillCategory = useStore((s) => s.removeSkillCategory)
   const updateSkillCategory = useStore((s) => s.updateSkillCategory)
   const updateSkillItems = useStore((s) => s.updateSkillItems)
+  const blockSession = useBlockRewriteStore((s) => s.session)
+
+  function guardedRewrite(fn: () => void) {
+    if (blockSession) {
+      if (window.confirm('Discard current rewrite?')) {
+        useBlockRewriteStore.getState().cancelRewrite()
+        fn()
+      }
+    } else {
+      fn()
+    }
+  }
 
   return (
     <div>
       <div className="editor-section-head">
-        <div>
-          <div className="editor-section-title">Skills & Tech</div>
-          <div className="editor-section-sub">{resume.skills.length} categories</div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            <div className="editor-section-title">Skills & Tech</div>
+            <div className="editor-section-sub">{resume.skills.length} categories</div>
+          </div>
+          <RewriteBlockButton
+            id="rewrite-btn-skills-section"
+            label="REORGANIZE"
+            disabled={resume.skills.length === 0 || !!blockSession}
+            onClick={() =>
+              guardedRewrite(() =>
+                dispatchBlockRewrite(
+                  { blockType: 'skills-section' },
+                  { blockType: 'skills-section', categories: resume.skills },
+                )
+              )
+            }
+          />
         </div>
       </div>
 
@@ -54,10 +84,7 @@ export default function SkillsSection({ resume }: { resume: Resume }) {
             <textarea
               defaultValue={cat.items.join(', ')}
               onBlur={(e) => {
-                const items = e.target.value
-                  .split(',')
-                  .map((x) => x.trim())
-                  .filter(Boolean)
+                const items = e.target.value.split(',').map((x) => x.trim()).filter(Boolean)
                 updateSkillItems(i, items)
               }}
               rows={2}

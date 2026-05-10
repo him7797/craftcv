@@ -10,6 +10,8 @@ export function buildEditorFocusUrl(target: ScoreActionItemTarget): string {
       return `/editor?focus=${encodeURIComponent(`keyword:${target.keyword}`)}`
     case 'tailor':
       return '/tailor'
+    case 'editor-block-rewrite':
+      return `/editor?focus=${encodeURIComponent(`rewrite:${target.blockType}:${target.blockId}`)}`
   }
 }
 
