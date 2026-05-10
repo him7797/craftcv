@@ -457,3 +457,144 @@ html, body { font-family: var(--font-sans); background: var(--w); color: var(--b
 .tailor-modal-h{font-family:var(--font-mono);font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:16px}
 .tailor-modal-input{width:100%;font-family:var(--font-sans);font-size:14px;border:var(--border);padding:10px 12px;background:var(--w);color:var(--b);outline:none}
 .tailor-modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end}
+
+/* ============================================================
+   PREVIEW (page 04) — chrome under .preview-*, document under .doc-*
+   ============================================================ */
+
+/* document tokens */
+:root {
+  --doc-bg: #FFFFFF;
+  --doc-text-1: #111;
+  --doc-text-2: #222;
+  --doc-text-meta: #666;
+  --doc-link: #0066CC;
+  --doc-divider: #DDD;
+  --doc-shadow: 0 4px 24px rgba(0,0,0,.08);
+  --doc-font: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* shell layout */
+.preview-shell{display:grid;grid-template-rows:64px 56px 1fr 24px;min-height:100vh;background:var(--w);color:var(--b)}
+
+/* top nav reuses .editor-topnav classes; preview-specific tag for print hiding */
+.preview-topnav{}
+
+/* sub-strip */
+.preview-substrip{background:var(--g);border-bottom:1px solid #E0E0E0;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 28px;max-width:1440px;margin:0 auto;width:100%}
+.preview-substrip-left{font-family:var(--font-mono);font-size:11px;letter-spacing:1.5px;color:#666;text-transform:uppercase}
+.preview-substrip-right{display:flex;align-items:center;gap:14px}
+.preview-substrip-label{font-family:var(--font-mono);font-size:10px;letter-spacing:1.2px;color:#888;text-transform:uppercase}
+.preview-chips{display:flex;gap:8px;align-items:center}
+
+/* version chip */
+.preview-chip{font-family:var(--font-mono);font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:#222;background:var(--w);border:var(--border);box-shadow:2px 2px 0 var(--b);padding:7px 16px;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
+.preview-chip:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--b)}
+.preview-chip.active{background:var(--y)}
+.preview-chip.active:hover{transform:none;box-shadow:2px 2px 0 var(--b)}
+
+/* canvas */
+.preview-canvas{background:var(--g);overflow-y:auto;padding:40px 0;display:flex;flex-direction:column;align-items:center;gap:32px}
+
+/* status bar reuses .editor-statusbar visual; preview-specific tag */
+.preview-statusbar{background:var(--b);height:24px;color:#888;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-family:var(--font-mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase}
+.preview-statusbar b{color:var(--w);font-weight:700}
+.preview-statusbar .ok{color:var(--green);font-weight:700}
+.preview-statusbar .warn{color:var(--y);font-weight:700;cursor:pointer}
+
+/* document — outer page frame */
+.doc-page{width:816px;background:var(--doc-bg);color:var(--doc-text-2);padding:64px 56px;font-family:var(--doc-font);box-shadow:var(--doc-shadow)}
+.doc-page-shadow{}/* tag-only — see @media print */
+.doc-page-break-indicator{height:32px;width:816px}
+
+/* document — header */
+.doc-name{font-size:28px;font-weight:700;letter-spacing:-.5px;color:var(--doc-text-1);line-height:1.3;margin:0}
+.doc-contact{font-size:12px;color:var(--doc-text-2);margin-top:8px;line-height:1.5;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.doc-contact .sep{color:var(--doc-text-meta)}
+.doc-contact a{color:var(--doc-link);text-decoration:none}
+.doc-contact a:hover{text-decoration:underline}
+.doc-divider{border:none;border-top:1px solid var(--doc-divider);margin:8px 0 0;width:100%;height:1px}
+
+/* document — section heading */
+.doc-section-h{font-size:11px;font-weight:600;letter-spacing:1.5px;color:var(--doc-text-meta);text-transform:uppercase;margin:24px 0 4px;line-height:1.3}
+.doc-section-h-divider{margin-bottom:16px}
+
+/* document — experience */
+.doc-experience-block{margin-bottom:24px}
+.doc-job-header{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:0}
+.doc-job-title{font-size:14px;font-weight:700;color:var(--doc-text-1)}
+.doc-job-sep{margin:0 8px;color:var(--doc-text-meta)}
+.doc-job-company{font-size:14px;font-weight:400;color:var(--doc-text-2)}
+.doc-date{font-size:12px;font-weight:400;color:var(--doc-text-meta)}
+
+.doc-client-group{margin-top:8px}
+.doc-client-group + .doc-client-group{margin-top:16px}
+.doc-client-line{font-size:11.5px;line-height:1.5;margin-bottom:8px}
+.doc-client-label{font-weight:700;color:var(--doc-text-2)}
+.doc-client-name{font-weight:700;color:var(--doc-text-2);margin-left:4px}
+.doc-meta-line{font-style:italic;color:var(--doc-text-meta);font-size:11.5px}
+.doc-meta-sep{margin:0 8px;color:var(--doc-text-meta);font-style:normal}
+
+/* document — bullet list */
+.doc-bullet-list{margin:8px 0 0;padding:0 0 0 18px;list-style:disc}
+.doc-bullet-list li::marker{color:#444}
+.doc-bullet{font-size:12.5px;font-weight:400;line-height:1.6;color:var(--doc-text-2);margin-bottom:4px}
+.doc-bullet strong{font-weight:700;color:var(--doc-text-1)}
+
+/* document — skills */
+.doc-skills-grid{display:grid;grid-template-columns:repeat(4,1fr);column-gap:32px;row-gap:24px;margin-top:0}
+.doc-skill-cat-label{font-size:12px;font-weight:700;color:var(--doc-text-1);margin-bottom:4px;line-height:1.4}
+.doc-skill-cat-items{font-size:12px;font-weight:400;color:var(--doc-text-2);line-height:1.5}
+
+/* document — education */
+.doc-edu-list{display:flex;flex-direction:column;gap:8px;margin-top:0}
+.doc-edu-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.doc-edu-degree{font-size:12.5px;font-weight:700;color:var(--doc-text-1)}
+.doc-edu-inst{font-size:12.5px;font-weight:400;color:var(--doc-text-2);margin-left:12px}
+.doc-edu-years{font-size:12px;color:var(--doc-text-meta)}
+
+/* document — projects */
+.doc-project{margin-bottom:16px}
+.doc-project-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.doc-project-name{font-size:13px;font-weight:700;color:var(--doc-text-1)}
+.doc-project-link{font-size:12px;color:var(--doc-link)}
+.doc-project-link:hover{text-decoration:underline}
+.doc-project-tech{font-size:11.5px;font-style:italic;color:var(--doc-text-meta);margin-top:4px}
+.doc-project-bullets{margin-top:4px}
+
+/* @media print — tuned for window.print() PDF export */
+@media print {
+  .preview-topnav,
+  .preview-substrip,
+  .preview-statusbar,
+  .doc-page-break-indicator{display:none !important}
+
+  body{background:#FFFFFF !important;margin:0 !important}
+  .preview-shell{display:block !important;background:#FFFFFF !important}
+  .preview-canvas{background:#FFFFFF !important;padding:0 !important;display:block !important}
+
+  .doc-page{
+    width:100% !important;
+    max-width:none !important;
+    margin:0 !important;
+    padding:56px 64px !important;
+    box-shadow:none !important;
+  }
+
+  *{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+
+  .doc-bullet{line-height:1.5 !important}
+
+  .doc-section-h,.doc-job-header{page-break-after:avoid}
+  .doc-bullet-list{page-break-inside:avoid}
+
+  .doc-experience-block{break-inside:avoid-page}
+}
+
+@page{
+  size:letter;
+  margin:0;
+}
