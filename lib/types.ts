@@ -184,3 +184,54 @@ export type PersistedSnapshot = {
   versions: Record<string, Version>
   lastSavedAt: string
 }
+
+// ─── Tailor (004-tailor-screen) ──────────────────────────────────────────────
+
+export type SmartCatch = {
+  keyword: string
+  foundIn: string
+  suggestion: string
+}
+
+export type LanguageSuggestion = {
+  resumeSays: string
+  jdLanguage: string
+  rationale?: string
+}
+
+export type AnalysisResult = {
+  matchScore: number
+  subscores: {
+    technologies: number
+    languageMirror: number
+    domainTerms: number
+  }
+  keywords: {
+    present: string[]
+    missing: string[]
+  }
+  smartCatches: SmartCatch[]
+  languageSuggestions: LanguageSuggestion[]
+  analysedAt: string
+  modelUsed: string
+}
+
+export type JdProfile = {
+  id: string
+  name: string
+  jdText: string
+  lastAnalysis: AnalysisResult | null
+  createdAt: string
+}
+
+export type TailorPersistedProfiles = {
+  schemaVersion: 1
+  profiles: JdProfile[]
+  activeProfileId: string | null
+}
+
+export type TailorPersistedDraft = {
+  schemaVersion: 1
+  draftJdText: string
+  savedAt: string
+}
