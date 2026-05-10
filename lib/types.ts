@@ -256,3 +256,74 @@ export type PreviewState = {
   measurement: PageMeasurement | null
   setMeasurement: (m: PageMeasurement) => void
 }
+
+// ─── Score (006-score-screen) ────────────────────────────────────────────────
+
+export type ScoreBand = 'NEEDS WORK' | 'OK' | 'GOOD' | 'GREAT'
+
+export type ScoreSubScore = {
+  score: number
+  explanation: string
+  issueIds: string[]
+}
+
+export type ScoreActionItemPriority = 'P1' | 'P2' | 'P3' | 'DONE'
+
+export type ScoreAxis = 'impact' | 'language' | 'tailoring' | 'format' | 'length'
+
+export type ScoreActionItemTarget =
+  | { kind: 'editor-section'; section: 'experience' | 'skills' | 'education' | 'projects' | 'header' }
+  | { kind: 'editor-bullet'; bulletId: string }
+  | { kind: 'editor-keyword'; keyword: string }
+  | { kind: 'tailor' }
+
+export type ScoreActionItem = {
+  id: string
+  priority: ScoreActionItemPriority
+  axis: ScoreAxis
+  title: string
+  body: string
+  actionLabel: string | null
+  actionTarget: ScoreActionItemTarget | null
+  scoreImpact: number
+}
+
+export type DashboardScoreResult = {
+  overall: number
+  band: ScoreBand
+  verdictText: string
+  subscores: {
+    impact: ScoreSubScore
+    language: ScoreSubScore
+    tailoring: ScoreSubScore
+    format: ScoreSubScore
+    length: ScoreSubScore
+  }
+  actionItems: ScoreActionItem[]
+  scoredAt: string
+  scoredContentHash: string
+  modelUsed: string
+  provider: 'ollama' | 'groq' | 'gemini' | 'fallback'
+  aiAvailable: boolean
+}
+
+export type ScoreHistoryEntry = {
+  weekIsoLabel: string
+  score: number
+  scoredAt: string
+}
+
+export type ScoreState = {
+  result: DashboardScoreResult | null
+  scoring: boolean
+  error: string | null
+  scoresByVersionId: Record<string, DashboardScoreResult>
+  historyByVersionId: Record<string, ScoreHistoryEntry[]>
+  hydrated: boolean
+  hydrate: () => void
+  runScore: (force?: boolean) => Promise<void>
+  setResult: (versionId: string, r: DashboardScoreResult) => void
+  clearError: () => void
+}
+
+export type AiEngineStatus = 'idle' | 'scoring' | 'unavailable'
