@@ -10,6 +10,7 @@ export type Resume = {
     role: string
     startDate: string
     endDate: string
+    description?: string
     clients?: {
       name: string
       tech?: string[]
@@ -31,6 +32,7 @@ export type Resume = {
     description: string
     tech?: string[]
     link?: string
+    bullets?: string[]
   }[]
   meta?: {
     hasPhoto: boolean
@@ -276,6 +278,7 @@ export type ScoreActionItemTarget =
   | { kind: 'editor-bullet'; bulletId: string }
   | { kind: 'editor-keyword'; keyword: string }
   | { kind: 'tailor' }
+  | { kind: 'editor-block-rewrite'; blockType: BlockType; blockId: string }
 
 export type ScoreActionItem = {
   id: string
@@ -327,3 +330,70 @@ export type ScoreState = {
 }
 
 export type AiEngineStatus = 'idle' | 'scoring' | 'unavailable'
+
+// ─── Block Rewrite (007-ai-block-rewrite) ────────────────────────────────────
+
+export type BlockType =
+  | 'experience-description'
+  | 'project-block'
+  | 'experience-bullets'
+  | 'skills-section'
+
+export type BlockPath =
+  | { blockType: 'experience-description'; expIndex: number }
+  | { blockType: 'project-block'; projectIndex: number }
+  | { blockType: 'experience-bullets'; expIndex: number; clientIndex: number | null }
+  | { blockType: 'skills-section' }
+
+export type BlockContent =
+  | { blockType: 'experience-description'; text: string }
+  | {
+      blockType: 'project-block'
+      name: string
+      description: string
+      tech: string[]
+      bullets: string[]
+      link?: string
+    }
+  | { blockType: 'experience-bullets'; bullets: string[] }
+  | { blockType: 'skills-section'; categories: { category: string; items: string[] }[] }
+
+export type DiffAnnotation = {
+  added: string[]
+  removed: string[]
+  modified: { from: string; to: string }[]
+}
+
+export type RewriteResult = {
+  blockType: BlockType
+  before: BlockContent
+  after: BlockContent
+  diff: DiffAnnotation
+  rationale: string
+  guidelinesApplied: string[]
+  warning?: 'may-not-match-guidelines'
+}
+
+export type RetryHint =
+  | 'different-angle'
+  | 'shorter'
+  | 'more-metrics'
+  | 'less-jargon'
+  | 'simpler-language'
+
+export type BlockRewriteSession = {
+  blockPath: BlockPath
+  streaming: boolean
+  rawStreamText: string
+  suggestion: RewriteResult | null
+  retriesLeft: number
+  error: string | null
+  previousContent: BlockContent | null
+  editMode: boolean
+}
+
+export type RewriteBlockEvent =
+  | { type: 'token'; value: string }
+  | { type: 'done'; result: RewriteResult }
+  | { type: 'retry'; reason: 'banned-phrase' | 'hallucination' }
+  | { type: 'error'; message: string }
