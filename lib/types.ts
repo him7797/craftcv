@@ -235,3 +235,24 @@ export type TailorPersistedDraft = {
   draftJdText: string
   savedAt: string
 }
+
+// ─── Preview (005-preview-screen) ────────────────────────────────────────────
+
+export type FitStatus = 'underfilled' | 'good' | 'overfilled'
+
+export type PageMeasurement = {
+  pageCount: number
+  fitStatus: FitStatus
+  overflowPx: number
+  measuredAt: string
+}
+
+export type AtsFlags = {
+  singleColumn: boolean
+  noPhotos: boolean
+}
+
+export type PreviewState = {
+  measurement: PageMeasurement | null
+  setMeasurement: (m: PageMeasurement) => void
+}
