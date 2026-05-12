@@ -8,6 +8,25 @@ export class LLMError extends Error {
   }
 }
 
+/** Resolves the active LLM provider from environment variables.
+ *  Priority: LLM_PROVIDER (explicit) > APP_ENV/NODE_ENV (auto).
+ *  Throws LLMError in production when no cloud API key is configured. */
+export function resolveProvider(): 'ollama' | 'groq' | 'gemini' {
+  const explicit = process.env.LLM_PROVIDER?.toLowerCase()
+  if (explicit === 'groq' || explicit === 'gemini' || explicit === 'ollama') return explicit
+
+  const env = process.env.APP_ENV ?? process.env.NODE_ENV ?? 'development'
+  if (env === 'production' || env === 'staging') {
+    if (process.env.GROQ_API_KEY) return 'groq'
+    if (process.env.GEMINI_API_KEY) return 'gemini'
+    throw new LLMError(
+      'Production LLM not configured. Set GROQ_API_KEY (or GEMINI_API_KEY) in your environment.',
+      'none',
+    )
+  }
+  return 'ollama'
+}
+
 async function callOllama(prompt: string): Promise<string> {
   const baseUrl = process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434'
   const model = process.env.OLLAMA_MODEL ?? 'qwen2.5:14b'
@@ -75,7 +94,7 @@ async function callGemini(prompt: string): Promise<string> {
 }
 
 export async function callLLM(prompt: string): Promise<string> {
-  const provider = process.env.LLM_PROVIDER ?? 'ollama'
+  const provider = resolveProvider()
 
   try {
     if (provider === 'groq') return await callGroq(prompt)
@@ -250,7 +269,7 @@ async function openGeminiStream(prompt: string): Promise<StreamHandle> {
  * X-LLM-Provider / X-LLM-Model on the route response.
  */
 export async function streamLLM(prompt: string): Promise<StreamHandle> {
-  const provider = process.env.LLM_PROVIDER ?? 'ollama'
+  const provider = resolveProvider()
 
   try {
     if (provider === 'groq') return await openGroqStream(prompt)

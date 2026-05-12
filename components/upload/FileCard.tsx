@@ -1,5 +1,7 @@
 'use client'
 
+import { resolveClientProvider } from '@/lib/llm-client'
+
 interface FileCardProps {
   file: File
   onClear?: () => void
@@ -145,7 +147,11 @@ export default function FileCard({ file, onClear, onParse, badge, compact }: Fil
               letterSpacing: 0.5,
             }}
           >
-            This runs locally with Ollama. Nothing leaves your machine.
+            {resolveClientProvider() === 'ollama'
+              ? 'This runs locally with Ollama. Nothing leaves your machine.'
+              : resolveClientProvider() === 'groq'
+                ? 'Parsed with Groq · LLAMA-3.3-70B'
+                : 'Parsed with Gemini · GEMINI FLASH'}
           </p>
         </div>
       )}
