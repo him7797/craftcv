@@ -1,3 +1,4 @@
+import { resolveProvider } from '@/lib/llm'
 import type { LlmStatus } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -6,7 +7,16 @@ let cache: { at: number; value: LlmStatus } | null = null
 const TTL_MS = 30_000
 
 async function fetchStatus(): Promise<LlmStatus> {
-  const provider = (process.env.LLM_PROVIDER ?? 'ollama') as LlmStatus['provider']
+  let provider: LlmStatus['provider']
+  try {
+    provider = resolveProvider()
+  } catch {
+    return {
+      provider: 'groq',
+      model: { rewrite: '—', score: 'rule-based · no LLM call' },
+      status: 'down',
+    }
+  }
 
   const rewriteModel =
     provider === 'ollama'
@@ -35,16 +45,11 @@ async function fetchStatus(): Promise<LlmStatus> {
         headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}` },
         signal: AbortSignal.timeout(3000),
       })
-      if (res.status === 429) {
-        const limit = Number(res.headers.get('x-ratelimit-limit-requests') ?? 0)
-        const remaining = Number(res.headers.get('x-ratelimit-remaining-requests') ?? 0)
-        return {
-          ...base,
-          status: 'rate-limited',
-          usage: { used: Math.max(0, limit - remaining), limit },
-        }
-      }
-      return { ...base, status: res.ok ? 'connected' : 'down' }
+      const limit = Number(res.headers.get('x-ratelimit-limit-requests') ?? 0)
+      const remaining = Number(res.headers.get('x-ratelimit-remaining-requests') ?? 0)
+      const usage = limit > 0 ? { used: Math.max(0, limit - remaining), limit } : undefined
+      if (res.status === 429) return { ...base, status: 'rate-limited', usage }
+      return { ...base, status: res.ok ? 'connected' : 'down', usage }
     }
     // gemini
     if (!process.env.GEMINI_API_KEY) return { ...base, status: 'down' }

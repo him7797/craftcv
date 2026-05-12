@@ -1,3 +1,5 @@
+import { resolveClientProvider } from '@/lib/llm-client'
+
 type Provider = 'ollama' | 'groq' | 'gemini' | 'fallback'
 
 const MODEL_LABEL: Record<Provider, string> = {
@@ -15,9 +17,7 @@ const PROVIDER_LABEL: Record<Provider, string> = {
 }
 
 export function getActiveProvider(): Provider {
-  const v = (process.env.NEXT_PUBLIC_LLM_PROVIDER ?? 'ollama').toLowerCase()
-  if (v === 'groq' || v === 'gemini') return v
-  return 'ollama'
+  return resolveClientProvider()
 }
 
 export function getModelLabel(provider: string): string {

@@ -1,5 +1,6 @@
 'use client'
 
+import { resolveClientProvider } from '@/lib/llm-client'
 import { useTailorStore } from '@/lib/store/useTailorStore'
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -9,8 +10,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 }
 
 function getProviderLabel(): string {
-  const provider = (process.env.NEXT_PUBLIC_LLM_PROVIDER ?? 'ollama').toLowerCase()
-  return PROVIDER_LABEL[provider] ?? 'OLLAMA LOCAL'
+  return PROVIDER_LABEL[resolveClientProvider()] ?? 'OLLAMA LOCAL'
 }
 
 export default function StatusBar() {
