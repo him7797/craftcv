@@ -17,7 +17,7 @@ function highlightText(text: string, diff: DiffAnnotation, side: 'before' | 'aft
 
   if (side === 'after') {
     // Added phrases: yellow background
-    let result: string = text
+    const result: string = text
     const addedPhrases = diff.added.filter((p) => result.toLowerCase().includes(p.toLowerCase()))
     if (addedPhrases.length === 0 && diff.modified.length === 0) return text
 
