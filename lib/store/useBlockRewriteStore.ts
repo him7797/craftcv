@@ -5,9 +5,16 @@ import { scheduleSave } from '@/lib/editor/autosave'
 
 const MAX_RETRIES = 3
 
+type PendingUndo = {
+  blockPath: BlockPath
+  previousContent: BlockContent
+}
+
 type BlockRewriteStore = {
   session: BlockRewriteSession | null
   toastVisible: boolean
+  pendingUndo: PendingUndo | null
+  onAccepted: (() => void) | null
 
   startRewrite: (blockPath: BlockPath, sourceContent: BlockContent) => void
   appendToken: (token: string) => void
@@ -21,6 +28,7 @@ type BlockRewriteStore = {
   undoLastAccept: () => void
   cancelRewrite: () => void
   dismissToast: () => void
+  setOnAccepted: (cb: () => void) => void
 }
 
 function applyBlockContent(blockPath: BlockPath, content: BlockContent): void {
@@ -86,6 +94,8 @@ let toastTimerId: ReturnType<typeof setTimeout> | null = null
 export const useBlockRewriteStore = create<BlockRewriteStore>((set, get) => ({
   session: null,
   toastVisible: false,
+  pendingUndo: null,
+  onAccepted: null,
 
   startRewrite: (blockPath, sourceContent) => {
     set({
@@ -124,25 +134,21 @@ export const useBlockRewriteStore = create<BlockRewriteStore>((set, get) => ({
   },
 
   acceptSuggestion: () => {
-    const { session } = get()
+    const { session, onAccepted } = get()
     if (!session?.suggestion) return
+    const { blockPath } = session
     const previousContent = session.suggestion.before
-    applyBlockContent(session.blockPath, session.suggestion.after)
+    applyBlockContent(blockPath, session.suggestion.after)
     if (toastTimerId) clearTimeout(toastTimerId)
     toastTimerId = setTimeout(() => {
-      useBlockRewriteStore.setState((s) => ({
-        toastVisible: false,
-        session: s.session ? { ...s.session, previousContent: null } : null,
-      }))
+      useBlockRewriteStore.setState({ toastVisible: false, pendingUndo: null })
     }, 8000)
-    set({
-      session: { ...session, suggestion: null, rawStreamText: '', previousContent, editMode: false, error: null },
-      toastVisible: true,
-    })
+    set({ session: null, pendingUndo: { blockPath, previousContent }, toastVisible: true, onAccepted: null })
+    onAccepted?.()
   },
 
   rejectSuggestion: () => {
-    set({ session: null, toastVisible: false })
+    set({ session: null, toastVisible: false, onAccepted: null })
   },
 
   retryWithHint: (hint) => {
@@ -160,7 +166,6 @@ export const useBlockRewriteStore = create<BlockRewriteStore>((set, get) => ({
         },
       }
     })
-    // Caller (blockRewriteDispatch) will pass hint to the next pump
     void hint
   },
 
@@ -172,40 +177,39 @@ export const useBlockRewriteStore = create<BlockRewriteStore>((set, get) => ({
   },
 
   saveEdit: (edited) => {
-    const { session } = get()
+    const { session, onAccepted } = get()
     if (!session) return
     const previousContent = session.suggestion?.before ?? null
     applyBlockContent(session.blockPath, edited)
     if (toastTimerId) clearTimeout(toastTimerId)
     toastTimerId = setTimeout(() => {
-      useBlockRewriteStore.setState((s) => ({
-        toastVisible: false,
-        session: s.session ? { ...s.session, previousContent: null } : null,
-      }))
+      useBlockRewriteStore.setState({ toastVisible: false, pendingUndo: null })
     }, 8000)
     set({
-      session: { ...session, suggestion: null, rawStreamText: '', previousContent, streaming: false, editMode: false, error: null },
+      session: null,
+      pendingUndo: previousContent ? { blockPath: session.blockPath, previousContent } : null,
       toastVisible: true,
+      onAccepted: null,
     })
+    onAccepted?.()
   },
 
   undoLastAccept: () => {
-    const { session } = get()
-    if (!session?.previousContent) return
-    applyBlockContent(session.blockPath, session.previousContent)
+    const { pendingUndo } = get()
+    if (!pendingUndo) return
+    applyBlockContent(pendingUndo.blockPath, pendingUndo.previousContent)
     if (toastTimerId) clearTimeout(toastTimerId)
-    set({
-      session: { ...session, previousContent: null },
-      toastVisible: false,
-    })
+    set({ pendingUndo: null, toastVisible: false })
   },
 
   cancelRewrite: () => {
-    set({ session: null, toastVisible: false })
+    set({ session: null, toastVisible: false, onAccepted: null })
   },
 
   dismissToast: () => {
     if (toastTimerId) clearTimeout(toastTimerId)
-    set({ toastVisible: false })
+    set({ toastVisible: false, pendingUndo: null })
   },
+
+  setOnAccepted: (cb) => set({ onAccepted: cb }),
 }))

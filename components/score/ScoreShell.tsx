@@ -4,6 +4,8 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useStore } from '@/lib/store'
 import { useScoreStore } from '@/lib/store/useScoreStore'
+import { useBlockRewriteStore } from '@/lib/store/useBlockRewriteStore'
+import RewriteModal from '@/components/editor/workspace/blocks/RewriteModal'
 import TopNav from './TopNav'
 import StatusBar from './StatusBar'
 import LeftColumn from './left/LeftColumn'
@@ -13,6 +15,10 @@ import RightColumn from './right/RightColumn'
 export default function ScoreShell() {
   const router = useRouter()
   const runScore = useScoreStore((s) => s.runScore)
+  const rewriteSession = useBlockRewriteStore((s) => s.session)
+  const toastVisible = useBlockRewriteStore((s) => s.toastVisible)
+  const undoLastAccept = useBlockRewriteStore((s) => s.undoLastAccept)
+  const dismissToast = useBlockRewriteStore((s) => s.dismissToast)
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -72,22 +78,77 @@ export default function ScoreShell() {
   }, [router, runScore])
 
   return (
-    <div className="score-shell">
-      <TopNav />
-      <div className="score-cols">
-        <section className="score-col" aria-label="Score and sub-scores">
-          <LeftColumn />
-        </section>
-        <div className="score-divider-v" aria-hidden />
-        <section className="score-col" aria-label="Action items">
-          <CenterColumn />
-        </section>
-        <div className="score-divider-v" aria-hidden />
-        <section className="score-col" aria-label="Comparison and history">
-          <RightColumn />
-        </section>
+    <>
+      <div className="score-shell">
+        <TopNav />
+        <div className="score-cols">
+          <section className="score-col" aria-label="Score and sub-scores">
+            <LeftColumn />
+          </section>
+          <div className="score-divider-v" aria-hidden />
+          <section className="score-col" aria-label="Action items">
+            <CenterColumn />
+          </section>
+          <div className="score-divider-v" aria-hidden />
+          <section className="score-col" aria-label="Comparison and history">
+            <RightColumn />
+          </section>
+        </div>
+        <StatusBar />
       </div>
-      <StatusBar />
-    </div>
+      {rewriteSession && <RewriteModal />}
+      {toastVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            background: '#fff',
+            border: '2px solid #000',
+            boxShadow: '3px 3px 0 #000',
+            padding: '12px 18px',
+            fontFamily: 'monospace',
+            fontSize: 11,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            zIndex: 200,
+          }}
+        >
+          Block updated. Score will refresh.
+          <button
+            type="button"
+            onClick={() => { undoLastAccept(); dismissToast() }}
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 11,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: 0,
+              color: '#000',
+            }}
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={dismissToast}
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 12,
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: '#888',
+              padding: 0,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+    </>
   )
 }

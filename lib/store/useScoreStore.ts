@@ -148,4 +148,19 @@ export const useScoreStore = create<ScoreState>((set, get) => ({
   },
 
   clearError: () => set({ error: null }),
+
+  resolveActionItem: (id: string) => {
+    const { result, scoresByVersionId } = get()
+    if (!result) return
+    const actionItems = result.actionItems.map((item) =>
+      item.id === id
+        ? { ...item, priority: 'DONE' as const, actionLabel: null, actionTarget: null }
+        : item,
+    )
+    const updated = { ...result, actionItems }
+    const versionId = useStore.getState().editor.activeVersionId
+    const scores = { ...scoresByVersionId, [versionId]: updated }
+    set({ result: updated, scoresByVersionId: scores })
+    saveScores(scores)
+  },
 }))

@@ -1,4 +1,4 @@
-import type { ScoreActionItemTarget } from '@/lib/types'
+import type { BlockPath, ScoreActionItemTarget } from '@/lib/types'
 
 export function buildEditorFocusUrl(target: ScoreActionItemTarget): string {
   switch (target.kind) {
@@ -13,6 +13,41 @@ export function buildEditorFocusUrl(target: ScoreActionItemTarget): string {
     case 'editor-block-rewrite':
       return `/editor?focus=${encodeURIComponent(`rewrite:${target.blockType}:${target.blockId}`)}`
   }
+}
+
+/**
+ * Parses a score issue ID into a block-level BlockPath for dispatchBlockRewrite.
+ * Issue ID format (from lib/editor/score/rules/impact.ts + language.ts):
+ *   "impact:no-metric:e-{expIndex}-{clientIndex|top}-{bulletIndex}"
+ *   "language:weak:e-{expIndex}-{clientIndex|top}-{bulletIndex}"
+ *   "impact:no-metric:p-{projectIndex}-{bulletIndex}"
+ * Returns null if the format is not recognized or parsed values are invalid.
+ */
+export function bulletIdToBlockPath(bulletId: string): BlockPath | null {
+  const parts = bulletId.split(':')
+  const pathSeg = parts[parts.length - 1]
+
+  if (pathSeg.startsWith('e-')) {
+    const segments = pathSeg.slice(2).split('-')
+    const expIndex = parseInt(segments[0], 10)
+    if (Number.isNaN(expIndex)) return null
+    const clientRaw = segments[1]
+    const clientIndex = clientRaw === 'top' || clientRaw === undefined ? null : parseInt(clientRaw, 10)
+    return {
+      blockType: 'experience-bullets',
+      expIndex,
+      clientIndex: typeof clientIndex === 'number' && Number.isNaN(clientIndex) ? null : clientIndex,
+    }
+  }
+
+  if (pathSeg.startsWith('p-')) {
+    const segments = pathSeg.slice(2).split('-')
+    const projectIndex = parseInt(segments[0], 10)
+    if (Number.isNaN(projectIndex)) return null
+    return { blockType: 'project-block', projectIndex }
+  }
+
+  return null
 }
 
 /**

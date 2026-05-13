@@ -1,6 +1,7 @@
 'use client'
 
 import type { ScoreActionItem } from '@/lib/types'
+import { useScoreStore } from '@/lib/store/useScoreStore'
 import ActionLink from './ActionLink'
 
 const PRIORITY_LABEL: Record<ScoreActionItem['priority'], string> = {
@@ -18,6 +19,7 @@ const PRIORITY_CLASS: Record<ScoreActionItem['priority'], string> = {
 }
 
 export default function ActionCard({ item }: { item: ScoreActionItem }) {
+  const resolveActionItem = useScoreStore((s) => s.resolveActionItem)
   const cls = PRIORITY_CLASS[item.priority]
   return (
     <article className={`score-action-card ${cls}`} tabIndex={0}>
@@ -25,7 +27,11 @@ export default function ActionCard({ item }: { item: ScoreActionItem }) {
       <div className="score-action-title">{item.title}</div>
       <div className="score-action-body">{item.body}</div>
       {item.priority !== 'DONE' && item.actionLabel && item.actionTarget && (
-        <ActionLink label={item.actionLabel} target={item.actionTarget} />
+        <ActionLink
+          label={item.actionLabel}
+          target={item.actionTarget}
+          onResolve={() => resolveActionItem(item.id)}
+        />
       )}
     </article>
   )
