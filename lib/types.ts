@@ -327,6 +327,7 @@ export type ScoreState = {
   runScore: (force?: boolean) => Promise<void>
   setResult: (versionId: string, r: DashboardScoreResult) => void
   clearError: () => void
+  resolveActionItem: (id: string) => void
 }
 
 export type AiEngineStatus = 'idle' | 'scoring' | 'unavailable'
